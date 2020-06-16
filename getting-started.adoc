@@ -1,0 +1,144 @@
+= Getting Started with Slurm
+
+- Slurm is a very capable workload manager.
+- Think of this as our own miniature version of Compute Cloud (such as Amazon EC2, Google Compute).
+- Slurm can manage a bunch of computing resources (CPUs, RAM, GPUS etc).
+- Shared grid - resources are shared with others.
+- We can request resources when we need it, run our jobs, and release back the resources.
+- Slurm keeps track of who is using what, avoids conflicts, decides priorities,
+queues jobs and runs whenever resources become available, does book keeping, etc.
+- Slurm has a command line interface => there are a bunch of commands we need to learn.
+
+
+== Commands
+
+- `squeue`: Shows jobs in queue -- running or pending. You may filter jobs based on many criterion
+- `srun`: Runs a command in interactive shell with STDIN/STDOUT connected.
+This is great for running a interactive shell (such as bash) on a worker node that needs input from your keyboard.
+- `sbatch`: Runs a command in batch mode. This is great for running shell scripts on worker node(s) that DO NOT need input from your keyboard.
+- `scancel`: Cancel any job (owned by you) in the queue.
+
+There are more slurm commands, but these are essential to do any basic work with slurm.
+
+== Logistics
+
+You need to know `partition`.
+For example, USC HPC has many partitions https://hpcc.usc.edu/resources/infrastructure/node-allocation/
+
+I have access to `isi` partition and I am going to use it in the following examples.
+You may want to use large/main/quick etc based on your allocations.
+
+
+== Check the jobs in queue
+
+----
+squeue # all jobs
+squeue -p isi  # jobs of isi partition
+squeue -u $USER # jobs of me
+----
+
+Here are some handy aliases
+----
+format="\"%8i %8g %9u %5P %30j %2t %12M %12l %5D %3C %10R %10b\""
+flags="-S +i -o ${format}"
+alias q="squeue -u $USER ${flags}"  # my jobs
+alias qa="squeue -p isi -a ${flags}" # Jobs in the parition I care
+alias qaa="squeue-a ${flags}" # Jobs from all paritions
+----
+I suggest pasting the above contents to `~slurm-env.sh` and sourcing it in bashrc
+
+  echo "source ~/slurm-env.sh >> ~/.bashrc"
+
+You'd most often use `q` for checking your jobs.
+If you want to keep an eye on who else is using(or competing for) resources from the partition, then `qa`.
+If you want to see across all partitions try `qaa`.
+
+
+== Get an interactive shell
+
+To get a bash shell on one of worker node
+
+  srun -p isi -t 4:00:00 --mem=4G -c 1 --pty bash
+
+Note the parameters: `isi` partition, `4:00:00` time which is 4 hours, with `4G` memory and `-c 1` cpu cores.
+`--pty bash` gives you bash shell after allocating a node.
+This assumes you need only one node `-N 1` as default.
+
+You can increase `-c 10` to get 10 CPU cores, or `--mem=20G` to get 20GB memory.
+
+CTRL+D to exit  or type `exit` to exit the shell.
+
+To request `1` GPU, add `--gres=gpu:1`
+
+  srun -p isi -t 4:00:00 --mem=8G -c 4 --gres=gpu:1 --pty bash
+
+And verify that you got a GPU by typing `nvidia-smi`
+
+You may also be more specific of GPU types
+
+- `--gres=gpu:p100:2` get 2 GPUs of type P100
+- `--gres=gpu:v100:1` get 1 GPU of type P100
+- `--gres=gpu:k80:4` get 4 GPU of type K80
+- `--gres=gpu:k80:4 -N 2` get 4 GPU of type K80, but 2 of such nodes => 2x4 = 8 GPUs
+
+Go to cluster overview page to see what kind of GPUs your cluster has.
+
+- USC https://hpcc.usc.edu/resources/infrastructure/node-allocation/
+- ISI Saga (private)  https://github.com/isi-vista/saga-cluster/blob/master/inventory.yaml
+- TACC (Use Guide) https://portal.tacc.utexas.edu/system-monitor
+
+== Submit a batch job
+
+If you swap `srun` with `sbatch` and `--pty bash` with `yourscript.sh arg1 arg2 .. argn` you get batch job!
+
+Batch job comes with an extra feature -- if you wish (and I recommend), you can set resource specs inside job script itself
+and you dont have to specify them.
+If a line begins with `#SBATCH`, slurm parses the rest of that line as if it was command line argument.
+
+Example:
+
+.myjob.sh
+[source,bash]
+----
+#!/usr/bin/env bash
+
+#SBATCH --partition=isi,main,large
+#SBATCH --mem=40g
+#SBATCH --time=23:59:00
+#SBATCH --nodes=1 --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:p100:2
+#SBATCH --output=R-%x.out.%j
+#SBATCH --error=R-%x.err.%j
+#SBATCH --export=NONE
+
+# rest of the script.
+
+hostname -f
+echo "Hello World : args:  ${@}"
+----
+
+  sbatch myjob.sh arg1 arg2
+
+By default, slurm uses script name as job name.
+If you run same script with different args, you may wish to set job name manually to easily identify them on queue.
+
+  sbatch -J myjob1 myjob.sh arg1 arg2
+  sbatch -J myjob2 myjob.sh arg3 arg4
+
+
+== Kill a job
+
+  scancel <jobid>
+
+You may get `<jobid>` from `squeue` or its pretty alias `q`
+
+
+
+
+
+
+
+
+
+
