@@ -1,0 +1,108 @@
+This page is for setting up Spark cluster inside slurm cluster.
+
+
+## Download Spark
+get it from https://spark.apache.org/downloads.html
+
+I got https://www.apache.org/dyn/closer.lua/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz
+
+[source, bash]
+----
+mkdir ~/libs/ && cd ~/libs/
+wget http://apache.mirrors.pair.com/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz
+tar xvf spark-2.4.6-bin-hadoop2.7.tgz
+ln -s spark-2.4.6-bin-hadoop2.7 spark
+export SPARK_HOME=$(realpath spark)
+----
+
+## Request a bunch of nodes from slurm
+
+First, lets try to do it in interactive shell `srun --pty bash`, later `sbatch` this
+
+  $ srun -p isi -t 0-4:00:00 -c 16 -N 4 --pty bash
+
+where `isi` is my partition name.
+If you happened to have GPUs on some nodes which you want to avoid use `-x`.
+Its best to not take up GPU nodes if you dont use them .
+
+  $ srun -p isi -t 0-4:00:00 -c 16 -N 4 -x hpc43[25-30] --pty bash
+
+Next, lets see which nodes we got
+
+[source, bash]
+----
+$ echo $SLURM_NODELIST
+hpc[3842-3843,3850-3851]
+# but we need to expand the hostnames to be working with spark
+$ scontrol show hostnames
+hpc3842
+hpc3843
+hpc3850
+hpc3851
+----
+
+Great! now we are good to start spark cluster.
+
+## Start Spark Cluster
+
+Assumptions:
+
+- your bash/shell session is on one of the worker nodes allotted by Slurm
+- you can get full list of nodes by `scontrol show hostnames`
+- You can ssh to each of them; you may verify it with this command
+
+  scontrol show hostnames | while read h; do ssh -n $h hostname -f ; done
+
+-  You have downloaded spark and extracted at `$SPARK_HOME`
+
+ export SPARK_HOME=/path/to/spark/extract/dir
+
+- All nodes have shared file system (NFS) and it can take the load of multiple read and writes;
+  If not, please setup HDFS with yarn. This is for Standalone Spark cluster
+
+
+Now, the remaining documentation is at https://spark.apache.org/docs/latest/spark-standalone.html
+
+Note that Apache Spark developers have given awesome set of scripts already
+
+
+- sbin/start-master.sh - Starts a master instance on the machine the script is executed on.
+- sbin/start-slaves.sh - Starts a slave instance on each machine specified in the conf/slaves file.
+- sbin/start-slave.sh - Starts a slave instance on the machine the script is executed on.
+- sbin/start-all.sh - Starts both a master and a number of slaves as described above.
+- sbin/stop-master.sh - Stops the master that was started via the sbin/start-master.sh script.
+- sbin/stop-slaves.sh - Stops all slave instances on the machines specified in the conf/slaves file.
+- sbin/stop-all.sh - Stops both the master and the slaves as described above.
+
+So, `sbin/start-all.sh` and `sbin/stop-all.sh` should take care of starting and stopping,
+except we have to specify worker nodes to it.
+
+Digging inside the scripts I found that, if we set `SPARK_SLAVES` variable
+to point to a plain text file with list of hosts, one host per line, the rest will work as expected
+
+To start
+[source, bash]
+----
+$ scontrol show hostnames > hostnames.txt
+$ export SPARK_SLAVES=$(realpath hostnames.txt)
+$SPARK_HOME/sbin/start-all.sh
+----
+
+To stop
+
+ $SPARK_HOME/sbin/stop-all.sh
+
+
+If there are any issues, check out `$SPARK_HOME/logs` for logs.
+
+Spark master is usually on the node which you run `start-all.sh`.
+So the master URL is `spark://<firsthost>:7077`
+
+
+
+
+
+
+
+
+
