@@ -92,7 +92,7 @@ Go to cluster overview page to see what kind of GPUs your cluster has.
 If you swap `srun` with `sbatch` and `--pty bash` with `yourscript.sh arg1 arg2 .. argn` you get batch job!
 
 Batch job comes with an extra feature -- if you wish (and I recommend), you can set resource specs inside job script itself
-and you dont have to specify them.
+and you dont have to specify them from command line every time you it.
 If a line begins with `#SBATCH`, slurm parses the rest of that line as if it was command line argument.
 
 Example:
