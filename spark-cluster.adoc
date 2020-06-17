@@ -1,7 +1,7 @@
-This page is for setting up Spark cluster inside slurm cluster.
+== Setting up Spark cluster inside Slurm cluster
 
 
-## Download Spark
+=== Download Spark
 get it from https://spark.apache.org/downloads.html
 
 I got https://www.apache.org/dyn/closer.lua/spark/spark-2.4.6/spark-2.4.6-bin-hadoop2.7.tgz
@@ -15,7 +15,7 @@ ln -s spark-2.4.6-bin-hadoop2.7 spark
 export SPARK_HOME=$(realpath spark)
 ----
 
-## Request a bunch of nodes from slurm
+=== Request a bunch of nodes from slurm
 
 First, lets try to do it in interactive shell `srun --pty bash`, later `sbatch` this
 
@@ -43,7 +43,7 @@ hpc3851
 
 Great! now we are good to start spark cluster.
 
-## Start Spark Cluster
+=== Start Spark Cluster
 
 Assumptions:
 
@@ -97,12 +97,3 @@ If there are any issues, check out `$SPARK_HOME/logs` for logs.
 
 Spark master is usually on the node which you run `start-all.sh`.
 So the master URL is `spark://<firsthost>:7077`
-
-
-
-
-
-
-
-
-

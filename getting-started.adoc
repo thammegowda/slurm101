@@ -1,4 +1,4 @@
-= Getting Started with Slurm
+== Getting Started with Slurm
 
 - Slurm is a very capable workload manager.
 - Think of this as our own miniature version of Compute Cloud (such as Amazon EC2, Google Compute).
