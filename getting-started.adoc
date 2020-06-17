@@ -43,7 +43,7 @@ format="\"%8i %8g %9u %5P %30j %2t %12M %12l %5D %3C %10R %10b\""
 flags="-S +i -o ${format}"
 alias q="squeue -u $USER ${flags}"  # my jobs
 alias qa="squeue -p isi -a ${flags}" # Jobs in the parition I care
-alias qaa="squeue-a ${flags}" # Jobs from all paritions
+alias qaa="squeue -a ${flags}" # Jobs from all paritions
 ----
 I suggest pasting the above contents to `~slurm-env.sh` and sourcing it in bashrc
 
@@ -62,7 +62,8 @@ To get a bash shell on one of worker node
 
 Note the parameters: `isi` partition, `4:00:00` time which is 4 hours, with `4G` memory and `-c 1` cpu cores.
 `--pty bash` gives you bash shell after allocating a node.
-This assumes you need only one node `-N 1` as default.
+Some version of slurm `-n 1 ` instead of `-c 1`, refer to `man slurm | grep cpu`.
+This assumes you need only one node `-N 1` as default, but for some versions of slurm you have to set it explicitly.
 
 You can increase `-c 10` to get 10 CPU cores, or `--mem=20G` to get 20GB memory.
 

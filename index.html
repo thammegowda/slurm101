@@ -552,7 +552,7 @@ squeue -u $USER # jobs of me</pre>
 flags="-S +i -o ${format}"
 alias q="squeue -u $USER ${flags}"  # my jobs
 alias qa="squeue -p isi -a ${flags}" # Jobs in the parition I care
-alias qaa="squeue-a ${flags}" # Jobs from all paritions</pre>
+alias qaa="squeue -a ${flags}" # Jobs from all paritions</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -584,7 +584,8 @@ If you want to see across all partitions try <code>qaa</code>.</p>
 <div class="paragraph">
 <p>Note the parameters: <code>isi</code> partition, <code>4:00:00</code> time which is 4 hours, with <code>4G</code> memory and <code>-c 1</code> cpu cores.
 <code>--pty bash</code> gives you bash shell after allocating a node.
-This assumes you need only one node <code>-N 1</code> as default.</p>
+Some version of slurm <code>-n 1 ` instead of `-c 1</code>, refer to <code>man slurm | grep cpu</code>.
+This assumes you need only one node <code>-N 1</code> as default, but for some versions of slurm you have to set it explicitly.</p>
 </div>
 <div class="paragraph">
 <p>You can increase <code>-c 10</code> to get 10 CPU cores, or <code>--mem=20G</code> to get 20GB memory.</p>
